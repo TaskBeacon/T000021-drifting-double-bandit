@@ -1,0 +1,77 @@
+task_id: T000021
+generated_at: '2026-02-17T06:58:44Z'
+selection_policy: tiered_mix_high_impact_plus_high_citation_open_access
+citation_threshold: 100
+papers:
+- id: W2955737617
+  title: Structured, uncertainty-driven exploration in real-world consumer choice
+  authors:
+  - Eric Schulz
+  - Rahul Bhui
+  - Bradley C. Love
+  - Bastien Brier
+  - Michael T. Todd
+  - Samuel J. Gershman
+  year: 2019
+  journal: Proceedings of the National Academy of Sciences
+  doi_or_url: https://doi.org/10.1073/pnas.1821028116
+  citation_count: 116
+  is_high_impact: true
+  open_access: true
+  used_for:
+  - task_workflow
+  - timing_parameters
+  parameter_bindings: {}
+  notes: ''
+- id: W2027554764
+  title: 'Risk, Unexpected Uncertainty, and Estimation Uncertainty: Bayesian Learning
+    in Unstable Settings'
+  authors:
+  - Élise Payzan-LeNestour
+  - Peter Bossaerts
+  year: 2011
+  journal: PLoS Computational Biology
+  doi_or_url: https://doi.org/10.1371/journal.pcbi.1001048
+  citation_count: 285
+  is_high_impact: false
+  open_access: true
+  used_for:
+  - task_workflow
+  - timing_parameters
+  parameter_bindings: {}
+  notes: ''
+- id: W2084489534
+  title: Uncertainty and Exploration in a Restless Bandit Problem
+  authors:
+  - Maarten Speekenbrink
+  - Emmanouil Konstantinidis
+  year: 2015
+  journal: Topics in Cognitive Science
+  doi_or_url: https://doi.org/10.1111/tops.12145
+  citation_count: 195
+  is_high_impact: false
+  open_access: true
+  used_for:
+  - task_workflow
+  - timing_parameters
+  parameter_bindings: {}
+  notes: ''
+- id: W3024348208
+  title: Dissociable neural correlates of uncertainty underlie different exploration
+    strategies
+  authors:
+  - Momchil S. Tomov
+  - Van Truong
+  - Rohan Hundia
+  - Samuel J. Gershman
+  year: 2020
+  journal: Nature Communications
+  doi_or_url: https://doi.org/10.1038/s41467-020-15766-z
+  citation_count: 108
+  is_high_impact: false
+  open_access: true
+  used_for:
+  - task_workflow
+  - timing_parameters
+  parameter_bindings: {}
+  notes: ''

@@ -1,0 +1,13 @@
+id: T000021
+slug: drifting-double-bandit
+title: Drifting Double-Bandit Task
+acquisition: behavior
+variant: baseline
+cognitive_domain: []
+maturity: draft
+version:
+  release_tag: ""
+contracts:
+  psyflow_taps: v0.1.0
+evidence: []
+maintainer: []
