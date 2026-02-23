@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import partial
 from typing import Any
 
-from psyflow import StimUnit, set_trial_context
+from psyflow import StimUnit, set_trial_context, next_trial_id
 from psyflow.sim import get_context
 
 # run_trial uses task-specific phase labels via set_trial_context(...).
@@ -18,10 +18,6 @@ def _qa_scale_duration(duration_s: float, win) -> float:
     min_frames = int(max(1, ctx.config.min_frames))
     scaled = base * float(ctx.config.timing_scale)
     return max(scaled, frame * min_frames)
-
-
-def _next_trial_id(controller) -> int:
-    return int(getattr(controller, "completed_trials", 0)) + 1
 
 
 def _parse_condition(condition: Any) -> tuple[float, float, str, int | None]:
@@ -66,7 +62,7 @@ def run_trial(
     block_id=None,
     block_idx=None,
 ):
-    trial_id = _next_trial_id(controller)
+    trial_id = next_trial_id()
     p_left, p_right, condition_id, trial_index = _parse_condition(condition)
 
     left_key = str(getattr(settings, "left_key", "f"))
@@ -90,7 +86,7 @@ def run_trial(
         cue,
         trial_id=trial_id,
         phase="pre_choice_fixation",
-        deadline_s=_qa_scale_duration(float(settings.cue_duration), win),
+        deadline_s=settings.cue_duration,
         valid_keys=[],
         block_id=block_id,
         condition_id=condition_id,
@@ -114,7 +110,7 @@ def run_trial(
         choice,
         trial_id=trial_id,
         phase="bandit_choice",
-        deadline_s=_qa_scale_duration(float(settings.choice_duration), win),
+        deadline_s=settings.choice_duration,
         valid_keys=[left_key, right_key],
         block_id=block_id,
         condition_id=condition_id,
@@ -179,7 +175,7 @@ def run_trial(
         target,
         trial_id=trial_id,
         phase="choice_confirmation",
-        deadline_s=_qa_scale_duration(float(settings.target_duration), win),
+        deadline_s=settings.target_duration,
         valid_keys=[],
         block_id=block_id,
         condition_id=condition_id,
@@ -216,7 +212,7 @@ def run_trial(
         feedback,
         trial_id=trial_id,
         phase="outcome_feedback",
-        deadline_s=_qa_scale_duration(float(settings.feedback_duration), win),
+        deadline_s=settings.feedback_duration,
         valid_keys=[],
         block_id=block_id,
         condition_id=condition_id,
@@ -242,7 +238,7 @@ def run_trial(
         iti,
         trial_id=trial_id,
         phase="inter_trial_interval",
-        deadline_s=_qa_scale_duration(float(settings.iti_duration), win),
+        deadline_s=settings.iti_duration,
         valid_keys=[],
         block_id=block_id,
         condition_id=condition_id,

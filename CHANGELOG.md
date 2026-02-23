@@ -2,6 +2,24 @@
 
 All notable development changes for `T000021-drifting-double-bandit` are documented here.
 
+## [0.2.2-dev] - 2026-02-19
+
+### Changed
+- Replaced template-like unit labels in `src/run_trial.py` with paradigm-specific labels (`pre_choice_fixation`, `bandit_choice`, `choice_confirmation`, `outcome_feedback`, `iti`).
+- Migrated timing keys to phase-specific names in all configs:
+  - `cue_duration` -> `pre_choice_fixation_duration`
+  - `target_duration` -> `choice_confirmation_duration`
+  - `feedback_duration` -> `outcome_feedback_duration`
+- Migrated trigger keys to phase-specific names in all configs:
+  - `cue_onset` -> `pre_choice_fixation_onset`
+  - `target_onset` -> `choice_confirmation_onset`
+  - `feedback_win_onset` / `feedback_loss_onset` -> `outcome_feedback_win_onset` / `outcome_feedback_loss_onset`
+- Updated references/docs (`references/task_logic_audit.md`, `references/parameter_mapping.md`, `README.md`) to keep audit-to-code traceability with the new phase naming.
+
+### Fixed
+- Added backward-compatible fallback lookup in `src/run_trial.py` so legacy timing/trigger keys continue to run while new phase-specific keys are canonical.
+- Standardized ITI runtime phase/state naming to `iti` instead of `inter_trial_interval`.
+
 ## [0.2.1] - 2026-02-18
 
 ### Changed

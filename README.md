@@ -5,15 +5,15 @@
 | Field | Value |
 |---|---|
 | Name | Drifting Double-Bandit Task |
-| Version | v0.2.1-dev |
+| Version | v0.2.2-dev |
 | URL / Repository | https://github.com/TaskBeacon/T000021-drifting-double-bandit |
 | Short Description | Restless two-armed bandit task for exploration-exploitation behavior under non-stationary rewards. |
 | Created By | TaskBeacon |
-| Date Updated | 2026-02-18 |
+| Date Updated | 2026-02-19 |
 | PsyFlow Version | 0.1.9 |
 | PsychoPy Version | 2025.1.1 |
 | Modality | Behavior |
-| Language | English |
+| Language | Chinese |
 | Voice Name | zh-CN-YunyangNeural |
 
 ## 1. Task Overview
@@ -60,7 +60,7 @@ This task implements a restless (drifting) two-armed bandit paradigm. Participan
 | `bandit_choice` | Choice response window. |
 | `choice_confirmation` | Selected-option confirmation stage. |
 | `outcome_feedback` | Outcome feedback stage. |
-| `inter_trial_interval` | ITI stage. |
+| `iti` | ITI stage. |
 
 ## 3. Configuration Summary
 
@@ -99,10 +99,10 @@ This task implements a restless (drifting) two-armed bandit paradigm. Participan
 
 | Phase | Duration |
 |---|---|
-| cue_duration | 0.50 s |
+| pre_choice_fixation_duration | 0.50 s |
 | choice_duration | 2.00 s |
-| target_duration | 0.35 s |
-| feedback_duration | 0.80 s |
+| choice_confirmation_duration | 0.35 s |
+| outcome_feedback_duration | 0.80 s |
 | iti_duration | 0.60 s |
 
 ## 4. Methods (for academic publication)

@@ -26,10 +26,10 @@
 ### Trial State Machine
 
 1. `pre_choice_fixation`
-   - Onset trigger: `cue_onset` (20)
+   - Onset trigger: `pre_choice_fixation_onset` (20; fallback-compatible with `cue_onset`)
    - Stimuli shown: central fixation (`fixation`)
    - Valid keys: none
-   - Timeout behavior: auto-advance after `cue_duration`
+   - Timeout behavior: auto-advance after `pre_choice_fixation_duration` (fallback-compatible with `cue_duration`)
    - Next state: `bandit_choice`
 2. `bandit_choice`
    - Onset trigger: `choice_onset` (30)
@@ -40,18 +40,18 @@
    - Timeout behavior: no key -> impute via controller policy (`random|left|right`)
    - Next state: `choice_confirmation`
 3. `choice_confirmation`
-   - Onset trigger: `target_onset` (40)
+   - Onset trigger: `choice_confirmation_onset` (40; fallback-compatible with `target_onset`)
    - Stimuli shown: same option panels + selected highlight (`highlight_left|highlight_right`) + confirmation text
    - Valid keys: none
-   - Timeout behavior: auto-advance after `target_duration`
+   - Timeout behavior: auto-advance after `choice_confirmation_duration` (fallback-compatible with `target_duration`)
    - Next state: `outcome_feedback`
 4. `outcome_feedback`
-   - Onset trigger: `feedback_win_onset` (50) or `feedback_loss_onset` (51)
+   - Onset trigger: `outcome_feedback_win_onset` (50) or `outcome_feedback_loss_onset` (51) (fallback-compatible with `feedback_win_onset` / `feedback_loss_onset`)
    - Stimuli shown: reward/no-reward message with updated running total
    - Valid keys: none
-   - Timeout behavior: auto-advance after `feedback_duration`
-   - Next state: `inter_trial_interval`
-5. `inter_trial_interval`
+   - Timeout behavior: auto-advance after `outcome_feedback_duration` (fallback-compatible with `feedback_duration`)
+   - Next state: `iti`
+5. `iti`
    - Onset trigger: `iti_onset` (60)
    - Stimuli shown: central fixation
    - Valid keys: none
@@ -128,14 +128,14 @@
   - `block_onset` = 10
   - `block_end` = 11
 - Trial:
-  - `pre_choice_fixation` -> `cue_onset` = 20
+  - `pre_choice_fixation` -> `pre_choice_fixation_onset` = 20 (fallback: `cue_onset`)
   - `bandit_choice` onset -> `choice_onset` = 30
   - choice response -> `choice_left_press` = 31 / `choice_right_press` = 32
   - choice timeout -> `choice_no_response` = 33
   - imputed response marker -> `choice_imputed` = 34
-  - `choice_confirmation` onset -> `target_onset` = 40
-  - `outcome_feedback` onset -> `feedback_win_onset` = 50 / `feedback_loss_onset` = 51
-  - `inter_trial_interval` onset -> `iti_onset` = 60
+  - `choice_confirmation` onset -> `choice_confirmation_onset` = 40 (fallback: `target_onset`)
+  - `outcome_feedback` onset -> `outcome_feedback_win_onset` = 50 / `outcome_feedback_loss_onset` = 51 (fallback: `feedback_win_onset` / `feedback_loss_onset`)
+  - `iti` onset -> `iti_onset` = 60
 
 ## 7. Inference Log
 
