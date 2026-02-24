@@ -7,11 +7,11 @@
 | `timing.choice_duration` | `2.0 s` | `W2955737617` | inferred | Short repeated response window in restless bandit decisions. |
 | `timing.choice_confirmation_duration` | `0.35 s` | `W3024348208` | inferred | Short commitment/confirmation display separates response from feedback. |
 | `timing.outcome_feedback_duration` | `0.8 s` | `W2084489534` | inferred | Feedback interval long enough for reinforcement signal registration. |
-| `controller.initial_left_prob` | `0.65` | `W2027554764` | inferred | Mild initial asymmetry to induce early learning pressure. |
-| `controller.initial_right_prob` | `0.35` | `W2027554764` | inferred | Complementary value for two-arm competition. |
-| `controller.drift_sigma` | `0.05` | `W2084489534` | inferred | Trial-wise Gaussian drift magnitude in restless environment. |
-| `controller.anti_correlated` | `true` | `W3024348208` | inferred | Maintains competing values between two options over time. |
-| `controller.min_prob/max_prob` | `0.10 / 0.90` | `W2084489534` | inferred | Prevents degenerate deterministic branches. |
+| `condition_generation.initial_left_prob` | `0.65` | `W2027554764` | inferred | Mild initial asymmetry to induce early learning pressure. |
+| `condition_generation.initial_right_prob` | `0.35` | `W2027554764` | inferred | Complementary value for two-arm competition. |
+| `condition_generation.drift_sigma` | `0.05` | `W2084489534` | inferred | Trial-wise Gaussian drift magnitude in restless environment. |
+| `condition_generation.anti_correlated` | `true` | `W3024348208` | inferred | Maintains competing values between two options over time. |
+| `condition_generation.min_prob/max_prob` | `0.10 / 0.90` | `W2084489534` | inferred | Prevents degenerate deterministic branches. |
 | `task.reward_win/reward_loss` | `10 / 0` | `W2955737617` | inferred | Discrete reinforcement signal suitable for behavioral modeling. |
 | `triggers.map.pre_choice_fixation_onset` | `20` | `W2955737617` | inferred | Event marker for pre-choice fixation onset. |
 | `triggers.map.choice_onset` | `30` | `W2955737617` | inferred | Event marker for choice-screen onset. |

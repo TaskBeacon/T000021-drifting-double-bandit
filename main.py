@@ -21,7 +21,7 @@ from psyflow import (
     runtime_context,
 )
 
-from src import Controller, run_trial
+from src import RewardTracker, generate_drifting_bandit_conditions, run_trial
 
 MODES = ("human", "qa", "sim")
 DEFAULT_CONFIG_BY_MODE = {
@@ -34,7 +34,7 @@ DEFAULT_CONFIG_BY_MODE = {
 def run(options: TaskRunOptions):
     """Run Drifting Double-Bandit task in human/qa/sim mode with one auditable flow."""
     task_root = Path(__file__).resolve().parent
-    cfg = load_config(str(options.config_path))
+    cfg = load_config(str(options.config_path), extra_keys=["condition_generation"])
     
     output_dir: Path | None = None
     runtime_scope = nullcontext()
@@ -69,23 +69,24 @@ def run(options: TaskRunOptions):
             settings.log_file = str(output_dir / "qa_psychopy.log")
             settings.json_file = str(output_dir / "qa_settings.json")
 
-        # 4. Setup triggers
+        # 4. Task-specific condition generation settings (no adaptive controller object)
+        condition_generation = cfg.get("condition_generation_config", {})
+
+        # 5. Setup triggers
         settings.triggers = cfg["trigger_config"]
         trigger_runtime = initialize_triggers(mock=True) if options.mode in ("qa", "sim") else initialize_triggers(cfg)
 
-        # 5. Set up window & input
+        # 6. Set up window & input
         win, kb = initialize_exp(settings)
 
-        # 6. Setup stimulus bank
+        # 7. Setup stimulus bank
         stim_bank = StimBank(win, cfg["stim_config"])
         if options.mode not in ("qa", "sim"):
             stim_bank = stim_bank.convert_to_voice("instruction_text")
         stim_bank = stim_bank.preload_all()
 
-        # 7. Setup controller
-        settings.controller = cfg["controller_config"]
-        settings.save_to_json()
-        controller = Controller.from_dict(settings.controller)
+        # 8. Setup reward tracker
+        reward_tracker = RewardTracker()
 
         trigger_runtime.send(settings.triggers.get("exp_onset"))
 
@@ -102,12 +103,6 @@ def run(options: TaskRunOptions):
             if options.mode not in ("qa", "sim"):
                 count_down(win, 3, color="white")
 
-            planned_conditions = controller.prepare_block(
-                block_idx=block_i,
-                n_trials=int(settings.trials_per_block),
-                seed=int(settings.block_seed[block_i]),
-            )
-
             block = (
                 BlockUnit(
                     block_id=f"block_{block_i}",
@@ -116,14 +111,20 @@ def run(options: TaskRunOptions):
                     window=win,
                     keyboard=kb,
                 )
-                .add_condition(planned_conditions)
+                .generate_conditions(
+                    func=generate_drifting_bandit_conditions,
+                    n_trials=int(settings.trials_per_block),
+                    condition_labels=list(getattr(settings, "conditions", ["bandit"])),
+                    seed=int(settings.block_seed[block_i]),
+                    **condition_generation,
+                )
                 .on_start(lambda b: trigger_runtime.send(settings.triggers.get("block_onset")))
                 .on_end(lambda b: trigger_runtime.send(settings.triggers.get("block_end")))
                 .run_trial(
                     partial(
                         run_trial,
                         stim_bank=stim_bank,
-                        controller=controller,
+                        reward_tracker=reward_tracker,
                         trigger_runtime=trigger_runtime,
                         block_id=f"block_{block_i}",
                         block_idx=block_i,

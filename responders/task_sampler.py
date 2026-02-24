@@ -60,8 +60,10 @@ class TaskSamplerResponder:
     def _softmax_prob_left(self, p_left: float, p_right: float) -> float:
         utility_left = float(p_left) + (self.perseveration if self._last_side == "left" else 0.0)
         utility_right = float(p_right) + (self.perseveration if self._last_side == "right" else 0.0)
-        z_left = exp(utility_left / self.temperature)
-        z_right = exp(utility_right / self.temperature)
+        logit_left = max(-60.0, min(60.0, utility_left / self.temperature))
+        logit_right = max(-60.0, min(60.0, utility_right / self.temperature))
+        z_left = exp(logit_left)
+        z_right = exp(logit_right)
         denom = z_left + z_right
         if denom <= 0:
             return 0.5
@@ -81,7 +83,7 @@ class TaskSamplerResponder:
             return Action(key=None, rt_s=None, meta={"source": "task_sampler", "reason": "rng_missing"})
 
         phase = str(obs.phase or "")
-        if phase != "anticipation":
+        if phase != "bandit_choice":
             if self.continue_key in valid_keys:
                 return Action(
                     key=self.continue_key,

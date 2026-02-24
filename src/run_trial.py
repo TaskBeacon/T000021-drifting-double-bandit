@@ -3,24 +3,14 @@ from __future__ import annotations
 from functools import partial
 from typing import Any
 
-from psyflow import StimUnit, set_trial_context, next_trial_id
-from psyflow.sim import get_context
+from psyflow import StimUnit, next_trial_id, set_trial_context
 
-# run_trial uses task-specific phase labels via set_trial_context(...).
-
-
-def _qa_scale_duration(duration_s: float, win) -> float:
-    base = max(0.0, float(duration_s))
-    ctx = get_context()
-    if ctx is None or not ctx.config.enable_scaling:
-        return base
-    frame = float(getattr(win, "monitorFramePeriod", 1.0 / 60.0) or (1.0 / 60.0))
-    min_frames = int(max(1, ctx.config.min_frames))
-    scaled = base * float(ctx.config.timing_scale)
-    return max(scaled, frame * min_frames)
+from .utils import reward_from_draw
 
 
-def _parse_condition(condition: Any) -> tuple[float, float, str, int | None]:
+def _parse_condition(
+    condition: Any,
+) -> tuple[float, float, str, int | None, str, float]:
     if isinstance(condition, dict):
         p_left = float(condition.get("p_left", 0.5))
         p_right = float(condition.get("p_right", 0.5))
@@ -30,8 +20,11 @@ def _parse_condition(condition: Any) -> tuple[float, float, str, int | None]:
                 f"L{int(round(p_left * 100)):02d}_R{int(round(p_right * 100)):02d}",
             )
         )
-        trial_index = condition.get("trial_index", None)
-        return p_left, p_right, condition_id, (int(trial_index) if trial_index is not None else None)
+        trial_index_raw = condition.get("trial_index", None)
+        fallback_side = str(condition.get("fallback_side", "left"))
+        reward_draw_u = float(condition.get("reward_draw_u", 0.5))
+        trial_index = int(trial_index_raw) if trial_index_raw is not None else None
+        return p_left, p_right, condition_id, trial_index, fallback_side, reward_draw_u
 
     if isinstance(condition, (tuple, list)) and len(condition) >= 2:
         p_left = float(condition[0])
@@ -42,7 +35,9 @@ def _parse_condition(condition: Any) -> tuple[float, float, str, int | None]:
             else f"L{int(round(p_left * 100)):02d}_R{int(round(p_right * 100)):02d}"
         )
         trial_index = int(condition[3]) if len(condition) >= 4 and condition[3] is not None else None
-        return p_left, p_right, condition_id, trial_index
+        fallback_side = str(condition[4]) if len(condition) >= 5 and condition[4] is not None else "left"
+        reward_draw_u = float(condition[5]) if len(condition) >= 6 and condition[5] is not None else 0.5
+        return p_left, p_right, condition_id, trial_index, fallback_side, reward_draw_u
 
     raise ValueError(f"Unsupported drifting-bandit condition format: {condition!r}")
 
@@ -57,13 +52,13 @@ def run_trial(
     settings,
     condition,
     stim_bank,
-    controller,
+    reward_tracker,
     trigger_runtime,
     block_id=None,
     block_idx=None,
 ):
     trial_id = next_trial_id()
-    p_left, p_right, condition_id, trial_index = _parse_condition(condition)
+    p_left, p_right, condition_id, trial_index, fallback_side, reward_draw_u = _parse_condition(condition)
 
     left_key = str(getattr(settings, "left_key", "f"))
     right_key = str(getattr(settings, "right_key", "j"))
@@ -78,15 +73,18 @@ def run_trial(
         "p_right": p_right,
         "left_reward_prob_pct": _fmt_pct(p_left),
         "right_reward_prob_pct": _fmt_pct(p_right),
+        "fallback_side": fallback_side,
+        "reward_draw_u": reward_draw_u,
     }
     make_unit = partial(StimUnit, win=win, kb=kb, runtime=trigger_runtime)
 
-    cue = make_unit(unit_label="cue").add_stim(stim_bank.get("fixation"))
+    pre_choice_fixation_duration = float(getattr(settings, "pre_choice_fixation_duration", 0.5))
+    cue = make_unit(unit_label="pre_choice_fixation").add_stim(stim_bank.get("fixation"))
     set_trial_context(
         cue,
         trial_id=trial_id,
         phase="pre_choice_fixation",
-        deadline_s=settings.cue_duration,
+        deadline_s=pre_choice_fixation_duration,
         valid_keys=[],
         block_id=block_id,
         condition_id=condition_id,
@@ -94,23 +92,24 @@ def run_trial(
         stim_id="fixation",
     )
     cue.show(
-        duration=float(settings.cue_duration),
-        onset_trigger=settings.triggers.get("cue_onset"),
+        duration=pre_choice_fixation_duration,
+        onset_trigger=settings.triggers.get("pre_choice_fixation_onset"),
     ).to_dict(trial_data)
 
+    bandit_choice_duration = float(getattr(settings, "choice_duration", 2.0))
     choice = (
-        make_unit(unit_label="anticipation")
+        make_unit(unit_label="bandit_choice")
         .add_stim(stim_bank.get("machine_left"))
         .add_stim(stim_bank.get("machine_right"))
         .add_stim(stim_bank.get("machine_left_label"))
         .add_stim(stim_bank.get("machine_right_label"))
-        .add_stim(stim_bank.get_and_format("choice_prompt", deadline_s=f"{float(settings.choice_duration):.1f}"))
+        .add_stim(stim_bank.get_and_format("choice_prompt", deadline_s=f"{bandit_choice_duration:.1f}"))
     )
     set_trial_context(
         choice,
         trial_id=trial_id,
         phase="bandit_choice",
-        deadline_s=settings.choice_duration,
+        deadline_s=bandit_choice_duration,
         valid_keys=[left_key, right_key],
         block_id=block_id,
         condition_id=condition_id,
@@ -127,7 +126,7 @@ def run_trial(
     choice.capture_response(
         keys=[left_key, right_key],
         correct_keys=[left_key, right_key],
-        duration=float(settings.choice_duration),
+        duration=bandit_choice_duration,
         onset_trigger=settings.triggers.get("choice_onset"),
         response_trigger={
             left_key: settings.triggers.get("choice_left_press"),
@@ -143,10 +142,10 @@ def run_trial(
     )
 
     raw_key = choice.get_state("response", None)
-    no_response = raw_key not in (left_key, right_key)
+    missed_choice = raw_key not in (left_key, right_key)
     choice_key = raw_key
-    if no_response:
-        choice_key = controller.fallback_choice(left_key=left_key, right_key=right_key)
+    if missed_choice:
+        choice_key = left_key if fallback_side == "left" else right_key
         trigger_runtime.send(settings.triggers.get("choice_imputed"))
 
     choice_side = "left" if choice_key == left_key else "right"
@@ -157,13 +156,14 @@ def run_trial(
         choice_key=choice_key,
         choice_side=choice_side,
         choice_prob=choice_prob,
-        missed_choice=no_response,
+        missed_choice=missed_choice,
     ).to_dict(trial_data)
 
+    choice_confirmation_duration = float(getattr(settings, "choice_confirmation_duration", 0.35))
     choice_label = "左侧机器" if choice_side == "left" else "右侧机器"
     highlight_id = "highlight_left" if choice_side == "left" else "highlight_right"
-    target = (
-        make_unit(unit_label="target")
+    confirm = (
+        make_unit(unit_label="choice_confirmation")
         .add_stim(stim_bank.get("machine_left"))
         .add_stim(stim_bank.get("machine_right"))
         .add_stim(stim_bank.get("machine_left_label"))
@@ -172,10 +172,10 @@ def run_trial(
         .add_stim(stim_bank.get_and_format("target_prompt", choice_label=choice_label))
     )
     set_trial_context(
-        target,
+        confirm,
         trial_id=trial_id,
         phase="choice_confirmation",
-        deadline_s=settings.target_duration,
+        deadline_s=choice_confirmation_duration,
         valid_keys=[],
         block_id=block_id,
         condition_id=condition_id,
@@ -189,30 +189,36 @@ def run_trial(
         },
         stim_id="selection_confirmation",
     )
-    target.show(
-        duration=float(settings.target_duration),
-        onset_trigger=settings.triggers.get("target_onset"),
+    confirm.show(
+        duration=choice_confirmation_duration,
+        onset_trigger=settings.triggers.get("choice_confirmation_onset"),
     ).to_dict(trial_data)
 
-    reward_win = controller.draw_reward(choice_side=choice_side, p_left=p_left, p_right=p_right)
+    reward_win = reward_from_draw(
+        choice_side=choice_side,
+        p_left=p_left,
+        p_right=p_right,
+        draw_u=reward_draw_u,
+    )
     reward_delta = reward_win_value if reward_win else reward_loss_value
-    projected_total = int(getattr(controller, "cumulative_reward", 0)) + reward_delta
+    total_score = reward_tracker.update(reward_delta)
     feedback_stim = (
-        stim_bank.get_and_format("feedback_win", reward_delta=reward_delta, total_score=projected_total)
+        stim_bank.get_and_format("feedback_win", reward_delta=reward_delta, total_score=total_score)
         if reward_win
-        else stim_bank.get_and_format("feedback_loss", reward_delta=reward_delta, total_score=projected_total)
+        else stim_bank.get_and_format("feedback_loss", reward_delta=reward_delta, total_score=total_score)
     )
     feedback_trigger = (
-        settings.triggers.get("feedback_win_onset")
+        settings.triggers.get("outcome_feedback_win_onset")
         if reward_win
-        else settings.triggers.get("feedback_loss_onset")
+        else settings.triggers.get("outcome_feedback_loss_onset")
     )
-    feedback = make_unit(unit_label="feedback").add_stim(feedback_stim)
+    outcome_feedback_duration = float(getattr(settings, "outcome_feedback_duration", 0.8))
+    feedback = make_unit(unit_label="outcome_feedback").add_stim(feedback_stim)
     set_trial_context(
         feedback,
         trial_id=trial_id,
         phase="outcome_feedback",
-        deadline_s=settings.feedback_duration,
+        deadline_s=outcome_feedback_duration,
         valid_keys=[],
         block_id=block_id,
         condition_id=condition_id,
@@ -226,42 +232,31 @@ def run_trial(
         stim_id="feedback_win" if reward_win else "feedback_loss",
     )
     feedback.show(
-        duration=float(settings.feedback_duration),
+        duration=outcome_feedback_duration,
         onset_trigger=feedback_trigger,
     ).set_state(
         reward_win=reward_win,
         reward_delta=reward_delta,
+        total_score=total_score,
     ).to_dict(trial_data)
 
+    iti_duration = float(getattr(settings, "iti_duration", 0.6))
     iti = make_unit(unit_label="iti").add_stim(stim_bank.get("fixation"))
     set_trial_context(
         iti,
         trial_id=trial_id,
-        phase="inter_trial_interval",
-        deadline_s=settings.iti_duration,
+        phase="iti",
+        deadline_s=iti_duration,
         valid_keys=[],
         block_id=block_id,
         condition_id=condition_id,
-        task_factors={"stage": "inter_trial_interval", "block_idx": block_idx},
+        task_factors={"stage": "iti", "block_idx": block_idx},
         stim_id="fixation",
     )
     iti.show(
-        duration=float(settings.iti_duration),
+        duration=iti_duration,
         onset_trigger=settings.triggers.get("iti_onset"),
     ).to_dict(trial_data)
-
-    controller.update(
-        {
-            "choice_side": choice_side,
-            "choice_key": choice_key,
-            "choice_prob": choice_prob,
-            "reward_win": reward_win,
-            "reward_delta": reward_delta,
-            "p_left": p_left,
-            "p_right": p_right,
-            "no_response": no_response,
-        }
-    )
 
     trial_data.update(
         {
@@ -269,10 +264,10 @@ def run_trial(
             "choice_side": choice_side,
             "choice_rt": choice_rt,
             "choice_prob": choice_prob,
-            "missed_choice": no_response,
+            "missed_choice": missed_choice,
             "reward_win": reward_win,
             "reward_delta": reward_delta,
-            "total_score": int(getattr(controller, "cumulative_reward", 0)),
+            "total_score": total_score,
         }
     )
     for key in [k for k in trial_data if k.endswith("_no_response")]:

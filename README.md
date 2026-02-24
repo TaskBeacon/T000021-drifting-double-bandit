@@ -5,11 +5,11 @@
 | Field | Value |
 |---|---|
 | Name | Drifting Double-Bandit Task |
-| Version | v0.2.2-dev |
+| Version | v0.2.3-dev |
 | URL / Repository | https://github.com/TaskBeacon/T000021-drifting-double-bandit |
 | Short Description | Restless two-armed bandit task for exploration-exploitation behavior under non-stationary rewards. |
 | Created By | TaskBeacon |
-| Date Updated | 2026-02-19 |
+| Date Updated | 2026-02-24 |
 | PsyFlow Version | 0.1.9 |
 | PsychoPy Version | 2025.1.1 |
 | Modality | Behavior |
@@ -26,9 +26,9 @@ This task implements a restless (drifting) two-armed bandit paradigm. Participan
 
 | Step | Description |
 |---|---|
-| 1. Initialize runtime | Window, triggers, stimulus bank, and controller are initialized. |
+| 1. Initialize runtime | Window, triggers, stimulus bank, condition-generation settings, and reward tracker are initialized. |
 | 2. Show instructions | Task instruction page is displayed before trials begin. |
-| 3. Prepare block drift path | Controller generates per-trial drifting reward probabilities for the block. |
+| 3. Prepare block drift path | Custom condition generation creates per-trial drifting reward probabilities and deterministic trial draws for the block. |
 | 4. Execute block trials | Each trial records choice, RT, reward outcome, and cumulative score. |
 | 5. Show block summary | Block statistics are displayed (choice ratio, hit rate, no-response ratio, block score). |
 | 6. Show final summary | Final metrics are displayed and data are saved. |
@@ -47,10 +47,11 @@ This task implements a restless (drifting) two-armed bandit paradigm. Participan
 
 | Component | Logic |
 |---|---|
+| Architecture note | No adaptive controller object is used; block conditions are precomputed from `condition_generation` settings and runtime only consumes those trial specs. |
 | Probability drift | Reward probabilities are updated each trial via Gaussian random walk (`drift_sigma`) and bounded to `[min_prob, max_prob]`. |
 | Coupling | With `anti_correlated=true`, left and right probabilities drift in opposite directions. |
 | Reward sampling | Bernoulli reward draw from current trial probabilities. |
-| No-response policy | If no response occurs, fallback policy imputes a choice and flags `no_response=true`. |
+| No-response policy | If no response occurs, a preplanned fallback side (generated from `no_choice_policy`) is used and `missed_choice=true` is logged. |
 
 ### Runtime Context Phases
 
