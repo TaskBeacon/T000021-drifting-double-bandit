@@ -1,14 +1,12 @@
-﻿# Stimulus Mapping
+# Stimulus Mapping
 
-Task: `Drifting Double-Bandit Task`
+## Mapping Table
 
-| Condition / Phase | Implemented Stimulus IDs | Source Paper ID | Evidence | Implementation Mode | Notes |
-|---|---|---|---|---|---|
-| Condition registry | `bandit` | `W2955737617` | Restless two-option bandit implemented as a single repeating condition with drifting latent reward rates. | `psychopy_builtin` | Condition token defined in `config/config.yaml`. |
-| Choice screen | `machine_left`, `machine_right`, `machine_left_label`, `machine_right_label`, `choice_prompt` | `W2955737617` | Restless two-option repeated choice under uncertainty. | `psychopy_builtin` | Side-by-side option display without condition leakage. |
-| Choice confirmation | `highlight_left`/`highlight_right`, `target_prompt` | `W3024348208` | Trial-wise choice commitment before reward feedback. | `psychopy_builtin` | Short confirmation stage for temporal separation of events. |
-| Outcome feedback | `feedback_win`, `feedback_loss` | `W2027554764` | Reinforcement signal in unstable environments updates choice policy. | `psychopy_builtin` | Displays immediate outcome and running total score. |
-| Inter-trial interval | `fixation` | `W2084489534` | Standard fixation-based ITI in sequential decision tasks. | `psychopy_builtin` | Stabilizes trial rhythm and trigger timing. |
-
-Implementation mode legend:
-- `psychopy_builtin`: rendered via PsychoPy text/shape primitives from YAML.
+| Condition | Stage/Phase | Stimulus IDs | Participant-Facing Content | Source Paper ID | Evidence (quote/figure/table) | Implementation Mode | Asset References | Notes |
+|---|---|---|---|---|---|---|---|---|
+| `bandit` | `pre_choice_fixation` | `fixation` | Central fixation before choice presentation | W2955737617 | Pre-choice pacing in repeated bandit decisions | psychopy_builtin | config text stimulus | Shared phase marker |
+| `bandit` | `bandit_choice` | `machine_left`, `machine_right`, `machine_left_label`, `machine_right_label`, `choice_prompt` | Two side-by-side machines with prompt to choose left/right | W2955737617 | Restless two-option repeated choice under uncertainty | psychopy_builtin | config shape/text stimuli | No internal condition token shown |
+| `bandit` | `choice_confirmation` | `highlight_left`, `highlight_right`, `target_prompt` | Brief confirmation of selected machine | W3024348208 | Post-choice commitment stage before reward signal | psychopy_builtin | config shape/text stimuli | Only chosen side highlighted |
+| `bandit` | `outcome_feedback` | `feedback_win`, `feedback_loss` | Win/loss feedback with running score | W2027554764; W2084489534 | Reinforcement signal in unstable reward environment | psychopy_builtin | config text stimuli | Outcome valence-specific messaging |
+| `bandit` | `iti` | `fixation` | Inter-trial fixation | W2084489534 | Trial separation in restless bandit flow | psychopy_builtin | config text stimulus | Shared phase marker |
+| `all` | `instruction/block_break/goodbye` | `instruction_text`, `block_break`, `good_bye` | Instructions, block summary, and completion message | inferred | Operational session flow support | psychopy_builtin | config text stimuli | Localization-ready via config |

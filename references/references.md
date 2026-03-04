@@ -7,12 +7,12 @@
 
 ## Selected Papers
 
-| ID | Year | Citations | Journal | High Impact | Title |
-|---|---:|---:|---|---|---|
-| W2955737617 | 2019 | 116 | Proceedings of the National Academy of Sciences | yes | Structured, uncertainty-driven exploration in real-world consumer choice |
-| W2027554764 | 2011 | 285 | PLoS Computational Biology | no | Risk, Unexpected Uncertainty, and Estimation Uncertainty: Bayesian Learning in Unstable Settings |
-| W2084489534 | 2015 | 195 | Topics in Cognitive Science | no | Uncertainty and Exploration in a Restless Bandit Problem |
-| W3024348208 | 2020 | 108 | Nature Communications | no | Dissociable neural correlates of uncertainty underlie different exploration strategies |
+| ID | Year | Citations | Journal | High Impact | Open Access | Title |
+|---|---:|---:|---|---|---|---|
+| W2955737617 | 2019 | 116 | Proceedings of the National Academy of Sciences | yes | yes | Structured, uncertainty-driven exploration in real-world consumer choice |
+| W2027554764 | 2011 | 285 | PLoS Computational Biology | no | yes | Risk, Unexpected Uncertainty, and Estimation Uncertainty: Bayesian Learning in Unstable Settings |
+| W2084489534 | 2015 | 195 | Topics in Cognitive Science | no | yes | Uncertainty and Exploration in a Restless Bandit Problem |
+| W3024348208 | 2020 | 108 | Nature Communications | no | yes | Dissociable neural correlates of uncertainty underlie different exploration strategies |
 
 ## Notes
 

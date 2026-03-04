@@ -137,7 +137,24 @@
   - `outcome_feedback` onset -> `outcome_feedback_win_onset` = 50 / `outcome_feedback_loss_onset` = 51
   - `iti` onset -> `iti_onset` = 60
 
-## 7. Inference Log
+## 7. Architecture Decisions (Auditability)
+
+- `main.py` runtime flow style (simple single flow / helper-heavy / why):
+  - simple mode-aware runtime path with explicit block/trial logging.
+- `utils.py` used? (yes/no)
+  - yes.
+- If yes, exact purpose (adaptive controller / sequence generation / asset pool / other):
+  - drifting probability condition generation and reward draw helpers.
+- Custom controller used? (yes/no)
+  - no.
+- If yes, why PsyFlow-native path is insufficient:
+  - not applicable.
+- Legacy/backward-compatibility fallback logic required? (yes/no)
+  - no.
+- If yes, scope and removal plan:
+  - not applicable.
+
+## 8. Inference Log
 
 - Decision: use explicit `choice_confirmation` stage between response and feedback.
   - Why inference was required: references emphasize event separation and decision commitment but do not prescribe a fixed duration for all implementations.
